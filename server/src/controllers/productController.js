@@ -81,10 +81,22 @@ async function listProducts(request, response, next) {
     const { q, search, category, sort = 'newest', lat, lng, radius } = request.query;
     const page = Math.max(1, Number(request.query.page) || 1);
     const limit = Math.min(100, Math.max(1, Number(request.query.limit) || 20));
-    const query = q || search;
+    const query = String(q || search || '').trim().replace(/\s+/g, ' ');
+    const searchTerms = [...new Set(query.toLocaleLowerCase().split(' ').filter((term) => term.length >= 2))].slice(0, 8);
     const where = {
       ...(category ? { category: { equals: category, mode: 'insensitive' } } : {}),
-      ...(query ? { OR: [{ name: { contains: query, mode: 'insensitive' } }, { description: { contains: query, mode: 'insensitive' } }] } : {})
+      ...(searchTerms.length ? {
+        AND: searchTerms.map((term) => ({
+          OR: [
+            { name: { contains: term, mode: 'insensitive' } },
+            { description: { contains: term, mode: 'insensitive' } },
+            { category: { contains: term, mode: 'insensitive' } },
+            { shop: { shopName: { contains: term, mode: 'insensitive' } } },
+            { shop: { city: { contains: term, mode: 'insensitive' } } },
+            { shop: { locationName: { contains: term, mode: 'insensitive' } } }
+          ]
+        }))
+      } : {})
     };
     let products = await prisma.product.findMany({ where, include: { shop: true } });
     const hasLatitude = lat !== undefined && lat !== '';
@@ -107,11 +119,32 @@ async function listProducts(request, response, next) {
     if (sort === 'price_asc') products.sort((a, b) => Number(a.price) - Number(b.price));
     else if (sort === 'price_desc') products.sort((a, b) => Number(b.price) - Number(a.price));
     else if (sort === 'distance' && hasLocation) products.sort((a, b) => a.distanceKm - b.distanceKm);
-    else products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    else if (searchTerms.length) {
+      products.sort((a, b) => searchRelevance(b, searchTerms) - searchRelevance(a, searchTerms)
+        || new Date(b.createdAt) - new Date(a.createdAt));
+    } else products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     const total = products.length;
     products = products.slice((page - 1) * limit, page * limit);
     return response.json({ success: true, data: serialize(products), meta: { page, limit, total, totalPages: Math.ceil(total / limit) } });
   } catch (error) { return next(error); }
+}
+
+function searchRelevance(product, terms) {
+  const name = product.name.toLocaleLowerCase();
+  const description = (product.description || '').toLocaleLowerCase();
+  const category = product.category.toLocaleLowerCase();
+  const shopName = (product.shop?.shopName || '').toLocaleLowerCase();
+  const shopLocation = `${product.shop?.city || ''} ${product.shop?.locationName || ''}`.toLocaleLowerCase();
+  return terms.reduce((score, term) => {
+    if (name === term) return score + 100;
+    if (name.startsWith(term)) return score + 60;
+    if (name.includes(term)) return score + 40;
+    if (description.includes(term)) return score + 20;
+    if (category.includes(term)) return score + 15;
+    if (shopName.includes(term)) return score + 10;
+    if (shopLocation.includes(term)) return score + 5;
+    return score;
+  }, 0);
 }
 
 async function getProduct(request, response, next) {

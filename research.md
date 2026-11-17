@@ -1,176 +1,70 @@
-# LocalLens – Research & Problem Discovery
+# LocalLens – Research
 
-## 1. Project Overview
+## 1. The Problem 
 
-**Project Name:** LocalLens
+1. Customers often need to visit multiple local shops to discover products and compare prices.
+2. Many neighbourhood retailers do not provide an easy way to browse their products online.
+3. Customers may prefer local shops but lack visibility into available products and prices before visiting.
+4. For products such as clothing and footwear, customers still want to physically check quality, size, and fitting.
+5. This creates a gap between the convenience of online product discovery and the trust of purchasing from nearby physical stores.
 
-**Concept:** A hyperlocal product discovery and reservation platform for local shops in Adityapur, near NIT Jamshedpur.
+## 2. Existing Solutions and Their Limitations
 
-LocalLens aims to connect customers with nearby retailers by allowing them to discover products, compare prices across local shops, and reserve products before visiting the store.
+### 1. Amazon
 
-## 2. Problem Statement
+Amazon allows customers to browse products, compare prices, and order online.
 
-Customers often prefer platforms like Amazon and Flipkart because discovering products and comparing prices across multiple physical stores requires visiting different shops.
+**Why it does not fully fit this problem:**
+- It primarily supports online purchasing and delivery.
+- Customers who want to inspect products physically before purchasing may not find it suitable.
+- Discovering and comparing products from specific nearby neighbourhood shops is not its primary focus.
 
-Even when similar products are available in nearby local stores, customers may choose online platforms because they can browse products and compare options conveniently from home.
+### 2. Flipkart
 
-On the other hand, local shopkeepers may struggle to showcase their products to customers who prefer discovering products online.
+Flipkart provides online product discovery, price comparison, and delivery services.
 
-This creates an opportunity to bridge the gap between local retailers and digitally oriented customers.
+**Why it does not fully fit this problem:**
+- It focuses on online transactions rather than connecting customers with nearby physical retailers.
+- Customers cannot easily compare listings from multiple local shops in a selected neighbourhood.
+- It does not primarily support discovering a product online and then visiting a nearby shop to inspect and purchase it.
 
-## 3. Target Users
+## 3. Proposed Direction: LocalLens
 
-### Customers
+LocalLens is a hyperlocal product discovery platform for customers and local retailers in Adityapur.
 
-- People who prefer browsing products online before purchasing.
-- Customers who want to compare prices across nearby shops.
-- Customers who want to physically inspect products before buying.
-- People who prefer purchasing from trusted local retailers.
+It aims to:
+- Help customers discover products from nearby shops.
+- Compare product prices across local retailers.
+- Filter results using location and a selected search radius.
+- Allow customers to contact shopkeepers through calls or WhatsApp.
+- Allow customers to submit reservation requests before visiting shops.
 
-### Local Shopkeepers
+LocalLens focuses on product discovery and offline purchases. It does not guarantee real-time stock availability or manage online payments and delivery.
 
-- Clothing and garment retailers.
-- Footwear retailers.
-- Mobile and electronics retailers.
+## 4. Sources Read
 
-## 4. Initial Market Observations
+### Source 1: Hyperlocal Marketing Strategies That Drive Local Business Growth – The N2 Company
 
-Three product categories were identified as potential starting points:
+Link: https://n2co.com/hyperlocal-marketing-strategies-that-drive-local-business-growth/
 
-### Clothing & Garments
+**Notes:**
+- The article explains how businesses can focus their marketing efforts on specific neighbourhoods, communities, and geographical areas instead of targeting a broad audience.
+- It discusses localized content, location-based search visibility, and combining digital and physical channels to reach nearby customers.
+- This helped me understand how local retailers can improve their visibility among nearby customers, which is one of the problems LocalLens aims to address.
 
-Products such as T-shirts, shirts, pants, dresses, and seasonal clothing.
+### Source 2: What is Hyperlocal Marketplace? – Webkul
 
-Customers want to discover designs and compare prices online but still need to check fabric quality and size physically before purchasing.
+Link: https://webkul.com/blog/hyperlocal-marketplace/
 
-### Mobile & Electronics
+**Notes:**
+- The article explains the hyperlocal marketplace model, where businesses focus on serving customers within a specific geographical area.
+- It describes how customers can discover nearby sellers using location-based services and how local vendors can serve targeted regions.
+- This helped me understand the role of geographical proximity and nearby sellers in a hyperlocal marketplace and influenced LocalLens's location-based product discovery approach.
 
-Products such as smartphones and electronic accessories.
+## 5. Research Conclusion
 
-Customers may compare prices online but prefer local stores because warranty, authenticity, and trust are important purchase considerations.
+The research helped me understand how hyperlocal platforms focus on connecting businesses with customers in specific geographical areas.
 
-### Footwear
+Existing e-commerce platforms provide convenient online product discovery and purchasing, but LocalLens explores a different approach: helping customers discover products from nearby physical retailers, compare their prices, and visit the shops before purchasing.
 
-Products such as shoes, sandals, and sneakers.
-
-Customers can browse designs online but often want to check comfort, quality, and fitting before purchasing.
-
-## 5. Proposed Solution
-
-LocalLens will allow local shopkeepers to list their products with:
-
-- Product name and images.
-- Category and description.
-- Price.
-- Shop name, location, and contact details.
-
-Customers will be able to:
-
-- Select their location.
-- Choose a search radius of 5 km, 10 km, or 15 km.
-- Discover matching product listings from nearby shops.
-- Compare prices, images, shops, and distances.
-- Contact shopkeepers through calls or WhatsApp.
-- Submit a reservation request and collect products offline.
-
-**Important scope limitation:** LocalLens is not an inventory management system. It will not track or guarantee real-time stock availability. Shopkeepers can manually update or remove listings. Customers should confirm availability with the shopkeeper before visiting or reserving a product.
-
-## 6. Initial Fieldwork Validation
-
-Three local shopkeepers from different product categories in Adityapur were approached to understand their willingness to showcase products on a hyperlocal platform.
-
-### 1. Clothing & Garments – Poonam Fancy Cloth Centre
-
-- **Shop:** Poonam Fancy Cloth Centre
-- **Location:** Shop No. 5, Satpathy Centre, Shere Punjab Chowk, Adityapur
-- **Category:** Men's Wear, Ladies Wear & Kids Wear
-
-**Discussion Findings:**
-
-The shopkeeper expressed willingness to list frequently demanded clothing products for an initial trial, including the latest T-shirts, shirts, pants, and seasonal products such as hoodies.
-
-The discussion highlighted the importance of physically checking fabric quality, material, and size before purchasing.
-
-### 2. Mobile & Electronics – New Garg Store
-
-- **Shop:** New Garg Store
-- **Location:** Garg Market, Sher-e-Punjab Chowk, Tata Kandra Road, Adityapur
-- **Category:** Mobiles, Electronics & Accessories
-
-**Discussion Findings:**
-
-The shopkeeper agreed with the idea of listing mobile phones on the platform.
-
-Warranty, product authenticity, and trust were highlighted as important factors influencing customers to visit nearby electronics stores before purchasing.
-
-### 3. Footwear – RAW
-
-- **Shop:** RAW
-- **Location:** Dayal Trade Centre, Sher-e-Punjab, Adityapur
-- **Category:** Sneakers, Sports Shoes, Formal Shoes & Loafers
-
-**Discussion Findings:**
-
-The shopkeeper suggested listing shoes on the platform, mentioning increased demand for footwear during the winter season.
-
-Customers still prefer physically checking shoe quality, comfort, and fitting before purchasing.
-
-### Customer-Side Findings
-
-The customer interactions highlighted the following problems:
-
-- **Clothing:** Customers want to physically check fabric quality and size before purchasing.
-- **Footwear:** Customers want to verify shoe quality, comfort, and fitting.
-- **Mobile & Electronics:** Customers value warranty, authenticity, and trust when purchasing mobile phones and electronics.
-
-### Initial Findings
-
-- All three shopkeepers expressed willingness to participate in an initial product-listing trial.
-- Shopkeepers suggested specific products based on frequent demand and seasonal trends.
-- Customers value physical verification of product quality, size, fitting, warranty, and authenticity.
-- Shopkeepers believe online product visibility could create additional sales opportunities, although the actual impact remains to be measured.
-
-## 7. Prototype Testing & Usage Validation
-
-Initial fieldwork with customers and three local shopkeepers has helped establish the problems on both sides of the local shopping experience.
-
-Customer interactions confirmed the difficulties associated with discovering products across multiple local shops, comparing prices, and balancing online convenience with the need for physical product verification.
-
-All three shopkeepers also expressed willingness to participate in an initial product-listing trial.
-
-The next phase will focus on evaluating how customers actually use LocalLens through a working prototype.
-
-The following metrics will be observed:
-
-1. **User Adoption:** How many customers visit and use the platform?
-2. **Usage Frequency:** How frequently do customers return to discover or compare products?
-3. **Product Discovery:** How many product searches and product views take place?
-4. **Reservation Activity:** How many customers submit reservation requests or contact shopkeepers?
-5. **Shopkeeper Engagement:** Whether product listings generate customer enquiries and potential sales opportunities.
-
-The prototype will help measure actual customer interest and usage patterns rather than relying only on stated preferences.
-
-## 8. MVP Scope
-
-The initial prototype will focus on:
-
-- Shop registration and product listing.
-- Product search and category filtering.
-- Location-based search within a selected radius.
-- Price comparison.
-- Product reservation requests.
-- Direct shop contact through calls and WhatsApp.
-
-Online payments, delivery management, and real-time inventory tracking are outside the initial scope.
-
-## 9. Research Conclusion
-
-Initial discussions with customers and three local shopkeepers in Adityapur helped identify problems on both sides of the local shopping experience.
-
-Customers want the convenience of discovering products and comparing prices online while retaining the ability to physically verify products before purchasing.
-
-Local shopkeepers have expressed interest in showcasing selected products online to reach potential customers.
-
-These findings provide the foundation for building and testing LocalLens with genuine product listings from participating local shops.
-
-The prototype trial will help evaluate customer adoption, usage frequency, reservation behaviour, and the potential business value for local retailers.
+The goal is to make local product discovery more convenient while retaining the benefits of physical shopping.

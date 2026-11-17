@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { LocateFixed, Search, SlidersHorizontal } from 'lucide-react';
+import { LocateFixed, Search, SlidersHorizontal, X } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import ProductCard from '../components/common/ProductCard';
@@ -29,11 +29,19 @@ function Marketplace() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [locationOpen, setLocationOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState(filters.q);
 
   useEffect(() => {
     const timer = setTimeout(loadProducts, 250);
     return () => clearTimeout(timer);
   }, [filters.q, filters.category, filters.sort, filters.lat, filters.lng, filters.manualLat, filters.manualLng, filters.radius]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((current) => (current.q === searchInput ? current : { ...current, q: searchInput.trim() }));
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   async function loadProducts() {
     setLoading(true);
@@ -97,7 +105,7 @@ function Marketplace() {
         <button type="button" className="button-secondary" onClick={() => setLocationOpen(!locationOpen)}><SlidersHorizontal size={17} /> Location & filters</button>
       </div>
       <div className="mt-8 flex flex-col gap-3 md:flex-row">
-        <label className="flex flex-1 items-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-3 focus-within:ring-2 focus-within:ring-brand-100"><Search size={19} className="text-slate-400" /><span className="sr-only">Search products</span><input className="w-full outline-none" placeholder="Search products by name or description" value={filters.q} onChange={(event) => setFilters({ ...filters, q: event.target.value })} /></label>
+        <label className="flex flex-1 items-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-3 focus-within:ring-2 focus-within:ring-brand-100"><Search size={19} className="text-slate-400" /><span className="sr-only">Search products</span><input className="w-full outline-none" placeholder="Search products, shops or areas" value={searchInput} onChange={(event) => setSearchInput(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); setFilters((current) => ({ ...current, q: searchInput.trim() })); } }} />{searchInput && <button type="button" className="text-slate-400 hover:text-slate-700" aria-label="Clear search" onClick={() => setSearchInput('')}><X size={17} /></button>}</label>
         <select className="field-input md:w-56" value={filters.sort} onChange={(event) => setFilters({ ...filters, sort: event.target.value })}><option value="">Sort by</option><option value="price_asc">Price: low to high</option><option value="price_desc">Price: high to low</option></select>
       </div>
       <div className="mt-5 flex flex-wrap gap-2">{categories.map((category) => <button key={category} type="button" className={`rounded-full px-4 py-2 text-sm font-medium ${filters.category === (category === 'All' ? '' : category) ? 'bg-brand-600 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-brand-300'}`} onClick={() => setFilters({ ...filters, category: category === 'All' ? '' : category })}>{category}</button>)}</div>
