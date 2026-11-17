@@ -14,7 +14,7 @@ The platform addresses the effort involved in visiting multiple shops to discove
 - Frontend: React, Vite, JavaScript, Tailwind CSS, React Router, Axios, Lucide React
 - Backend: Node.js, Express, JavaScript (CommonJS), dotenv, cors
 - Database: PostgreSQL, Prisma ORM
-- Planned later phases: JWT/bcrypt, Cloudinary
+- Backend authentication uses JWT/bcrypt; product images use Cloudinary when configured.
 
 ## Project structure
 
@@ -97,4 +97,23 @@ npm run build
 
 ## Current development phase
 
-**Phase 2: Database & Backend Architecture.** This phase adds the PostgreSQL/Prisma schema, initial migration, reusable Prisma client, and database setup commands. Authentication, seller tools, product APIs, reservations, image uploads, and other application functionality remain intentionally deferred to later phases.
+**Phases 3–6: Authentication, seller management, marketplace discovery, and location filtering.**
+Reservation APIs, analytics, payments, delivery, inventory tracking, and other later-phase
+features remain intentionally out of scope.
+
+## Backend API
+
+Authentication endpoints are `POST /api/auth/register`, `POST /api/auth/login`, and
+`GET /api/auth/me` (Bearer token). Public marketplace endpoints are
+`GET /api/shops`, `GET /api/shops/:id`, `GET /api/products`, and
+`GET /api/products/:id`. Seller endpoints create/update shops and manage products
+under `/api/shops/:shopId/products` and `/api/products/:id`.
+
+`GET /api/products` accepts `q` (or `search`), `category`, `sort` (`newest`,
+`price_asc`, `price_desc`, or `distance`), `page`, `limit`, and optional
+`lat`, `lng`, `radius` (kilometres). Successful list responses have the shape
+`{ success: true, data: [...], meta: { page, limit, total, totalPages } }`;
+detail responses use `{ success: true, data: {...} }`. Seller product create/update
+accepts multipart field `image`. Cloudinary credentials are required for image
+operations. `GET /api/shops/mine` returns the authenticated seller's shops.
+Product listings are for discovery only and do not guarantee current availability.

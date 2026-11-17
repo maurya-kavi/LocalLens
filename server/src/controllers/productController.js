@@ -1,0 +1,113 @@
+const prisma = require('../config/prisma');
+const { httpError, serialize } = require('../utils/http');
+const { distanceKm } = require('../utils/geo');
+const { uploadImage, deleteImage } = require('../services/cloudinary');
+
+const productFields = ['name', 'description', 'category', 'price'];
+
+function productData(body) {
+  const data = {};
+  productFields.forEach((field) => {
+    if (body[field] !== undefined) data[field] = field === 'price' ? Number(body[field]) : body[field];
+  });
+  if (data.price !== undefined && (!Number.isFinite(data.price) || data.price < 0)) throw httpError(400, 'Invalid price');
+  return data;
+}
+
+async function ownerShop(shopId, userId) {
+  const shop = await prisma.shop.findUnique({ where: { id: shopId } });
+  if (!shop) throw httpError(404, 'Shop not found');
+  if (shop.ownerId !== userId) throw httpError(403, 'You do not own this shop');
+  return shop;
+}
+
+async function imageUpdate(file, oldUrl) {
+  if (!file) return {};
+  const result = await uploadImage(file);
+  if (oldUrl) {
+    const match = oldUrl.match(/\/upload\/(?:v\d+\/)?(.+)\.[^./?]+$/);
+    if (match) await deleteImage(match[1]);
+  }
+  return { imageUrl: result.secure_url };
+}
+
+async function createProduct(request, response, next) {
+  try {
+    await ownerShop(request.params.shopId, request.user.id);
+    const data = productData(request.body);
+    if (!data.name || !data.category || data.price === undefined) throw httpError(400, 'Name, category and price are required');
+    Object.assign(data, await imageUpdate(request.file));
+    const product = await prisma.product.create({ data: { ...data, shopId: request.params.shopId } });
+    return response.status(201).json({ success: true, data: serialize(product) });
+  } catch (error) { return next(error); }
+}
+
+async function listShopProducts(request, response, next) {
+  try {
+    await ownerShop(request.params.shopId, request.user.id);
+    const products = await prisma.product.findMany({ where: { shopId: request.params.shopId }, orderBy: { createdAt: 'desc' } });
+    return response.json({ success: true, data: serialize(products), meta: { total: products.length } });
+  } catch (error) { return next(error); }
+}
+
+async function updateProduct(request, response, next) {
+  try {
+    const product = await prisma.product.findUnique({ where: { id: request.params.id } });
+    if (!product) throw httpError(404, 'Product not found');
+    await ownerShop(product.shopId, request.user.id);
+    const data = productData(request.body);
+    Object.assign(data, await imageUpdate(request.file, product.imageUrl));
+    const updated = await prisma.product.update({ where: { id: product.id }, data });
+    return response.json({ success: true, data: serialize(updated) });
+  } catch (error) { return next(error); }
+}
+
+async function deleteProduct(request, response, next) {
+  try {
+    const product = await prisma.product.findUnique({ where: { id: request.params.id } });
+    if (!product) throw httpError(404, 'Product not found');
+    await ownerShop(product.shopId, request.user.id);
+    if (product.imageUrl) {
+      const match = product.imageUrl.match(/\/upload\/(?:v\d+\/)?(.+)\.[^./?]+$/);
+      if (match) await deleteImage(match[1]);
+    }
+    await prisma.product.delete({ where: { id: product.id } });
+    return response.json({ success: true, data: { id: product.id } });
+  } catch (error) { return next(error); }
+}
+
+async function listProducts(request, response, next) {
+  try {
+    const { q, search, category, sort = 'newest', lat, lng, radius } = request.query;
+    const page = Math.max(1, Number(request.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(request.query.limit) || 20));
+    const query = q || search;
+    const where = {
+      ...(category ? { category: { equals: category, mode: 'insensitive' } } : {}),
+      ...(query ? { OR: [{ name: { contains: query, mode: 'insensitive' } }, { description: { contains: query, mode: 'insensitive' } }] } : {})
+    };
+    let products = await prisma.product.findMany({ where, include: { shop: true } });
+    const hasLocation = lat !== undefined && lng !== undefined;
+    const latitude = Number(lat); const longitude = Number(lng); const maxRadius = Number(radius);
+    if (hasLocation && (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !Number.isFinite(maxRadius) || maxRadius < 0)) throw httpError(400, 'Invalid location or radius');
+    products = products.map((product) => ({ ...product, distanceKm: hasLocation ? distanceKm(latitude, longitude, Number(product.shop.latitude), Number(product.shop.longitude)) : null }));
+    if (hasLocation) products = products.filter((product) => product.distanceKm <= maxRadius);
+    if (sort === 'price_asc') products.sort((a, b) => Number(a.price) - Number(b.price));
+    else if (sort === 'price_desc') products.sort((a, b) => Number(b.price) - Number(a.price));
+    else if (sort === 'distance' && hasLocation) products.sort((a, b) => a.distanceKm - b.distanceKm);
+    else products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const total = products.length;
+    products = products.slice((page - 1) * limit, page * limit);
+    return response.json({ success: true, data: serialize(products), meta: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+  } catch (error) { return next(error); }
+}
+
+async function getProduct(request, response, next) {
+  try {
+    const product = await prisma.product.findUnique({ where: { id: request.params.id }, include: { shop: true } });
+    if (!product) throw httpError(404, 'Product not found');
+    return response.json({ success: true, data: serialize(product) });
+  } catch (error) { return next(error); }
+}
+
+module.exports = { createProduct, listShopProducts, updateProduct, deleteProduct, listProducts, getProduct };

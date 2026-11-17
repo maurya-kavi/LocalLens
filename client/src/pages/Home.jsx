@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import { ArrowRight, CheckCircle2, MapPin, Search } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { getHealthStatus } from '../services/api';
 
 function Home() {
+  const navigate = useNavigate();
+  const [query, setQuery] = useState('');
   const [apiStatus, setApiStatus] = useState('checking');
 
   useEffect(() => {
@@ -10,6 +13,11 @@ function Home() {
       .then(() => setApiStatus('connected'))
       .catch(() => setApiStatus('unavailable'));
   }, []);
+
+  function handleSearch(event) {
+    event.preventDefault();
+    navigate(query.trim() ? `/marketplace?q=${encodeURIComponent(query.trim())}` : '/marketplace');
+  }
 
   return (
     <>
@@ -26,17 +34,17 @@ function Home() {
             <p className="mt-5 max-w-xl text-lg leading-8 text-slate-600">
               LocalLens helps you explore products from nearby physical stores so you can compare options, connect with shopkeepers, and visit with confidence.
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <form onSubmit={handleSearch} className="mt-8 flex flex-col gap-3 sm:flex-row">
               <label className="flex flex-1 items-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-3 shadow-sm focus-within:border-brand-600 focus-within:ring-2 focus-within:ring-brand-100">
                 <Search size={20} className="text-slate-400" aria-hidden="true" />
                 <span className="sr-only">Search for products</span>
-                <input type="search" placeholder="What are you looking for?" className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400" />
+                <input type="search" placeholder="What are you looking for?" className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400" value={query} onChange={(event) => setQuery(event.target.value)} />
               </label>
-              <button type="button" className="button-primary">
+              <button type="submit" className="button-primary">
                 Explore nearby
                 <ArrowRight size={18} aria-hidden="true" />
               </button>
-            </div>
+            </form>
             <div className="mt-4 flex items-center gap-2 text-sm text-slate-500">
               <MapPin size={16} aria-hidden="true" />
               <span>Choose your location to see nearby options</span>
@@ -70,6 +78,11 @@ function Home() {
           {apiStatus === 'connected' && 'LocalLens API connected.'}
           {apiStatus === 'unavailable' && 'API connection is unavailable. The interface is still available.'}
         </p>
+        <div className="mt-8 flex flex-wrap gap-3">
+          {['Clothing', 'Footwear', 'Mobile & Electronics'].map((category) => (
+            <Link key={category} to={`/marketplace?category=${encodeURIComponent(category)}`} className="rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-600 ring-1 ring-slate-200 transition hover:text-brand-700 hover:ring-brand-300">{category}</Link>
+          ))}
+        </div>
       </section>
     </>
   );
