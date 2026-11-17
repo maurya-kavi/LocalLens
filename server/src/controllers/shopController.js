@@ -1,15 +1,25 @@
 const prisma = require('../config/prisma');
 const { httpError, serialize } = require('../utils/http');
 
-const shopFields = ['shopName', 'description', 'category', 'address', 'city', 'state', 'pincode', 'latitude', 'longitude', 'phone', 'whatsappNumber'];
+const shopFields = ['shopName', 'locationName', 'description', 'category', 'address', 'city', 'state', 'pincode', 'latitude', 'longitude', 'phone', 'whatsappNumber'];
 
 function shopData(body) {
   const data = {};
   shopFields.forEach((field) => {
-    if (body[field] !== undefined) data[field] = ['latitude', 'longitude'].includes(field) ? Number(body[field]) : body[field];
+    if (body[field] !== undefined) {
+      if (['latitude', 'longitude'].includes(field)) {
+        const value = body[field];
+        data[field] = value === null || String(value).trim() === '' ? null : Number(value);
+      } else {
+        data[field] = body[field];
+      }
+    }
   });
-  if (data.latitude !== undefined && (Number.isNaN(data.latitude) || data.latitude < -90 || data.latitude > 90)) throw httpError(400, 'Invalid latitude');
-  if (data.longitude !== undefined && (Number.isNaN(data.longitude) || data.longitude < -180 || data.longitude > 180)) throw httpError(400, 'Invalid longitude');
+  const latitudeProvided = data.latitude !== undefined && data.latitude !== null;
+  const longitudeProvided = data.longitude !== undefined && data.longitude !== null;
+  if (latitudeProvided !== longitudeProvided) throw httpError(400, 'Latitude and longitude must be provided together');
+  if (latitudeProvided && (!Number.isFinite(data.latitude) || data.latitude < -90 || data.latitude > 90)) throw httpError(400, 'Invalid latitude');
+  if (longitudeProvided && (!Number.isFinite(data.longitude) || data.longitude < -180 || data.longitude > 180)) throw httpError(400, 'Invalid longitude');
   return data;
 }
 
@@ -50,7 +60,7 @@ async function getShop(request, response, next) {
 async function createShop(request, response, next) {
   try {
     const data = shopData(request.body);
-    if (!data.shopName || !data.category || data.latitude === undefined || data.longitude === undefined) throw httpError(400, 'Shop name, category and coordinates are required');
+    if (!data.shopName || !data.category) throw httpError(400, 'Shop name and category are required');
     const shop = await prisma.shop.create({ data: { ...data, ownerId: request.user.id } });
     return response.status(201).json({ success: true, data: serialize(shop) });
   } catch (error) { return next(error); }

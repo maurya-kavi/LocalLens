@@ -97,7 +97,8 @@ npm run build
 
 ## Current development phase
 
-**Phases 3–6: Authentication, seller management, marketplace discovery, and location filtering.**
+**Phases 3–6 plus location search: Authentication, seller management, marketplace discovery,
+Nominatim place selection, and radius filtering.**
 Reservation APIs, analytics, payments, delivery, inventory tracking, and other later-phase
 features remain intentionally out of scope.
 

@@ -87,9 +87,21 @@ async function listProducts(request, response, next) {
       ...(query ? { OR: [{ name: { contains: query, mode: 'insensitive' } }, { description: { contains: query, mode: 'insensitive' } }] } : {})
     };
     let products = await prisma.product.findMany({ where, include: { shop: true } });
-    const hasLocation = lat !== undefined && lng !== undefined;
+    const hasLatitude = lat !== undefined && lat !== '';
+    const hasLongitude = lng !== undefined && lng !== '';
+    if (hasLatitude !== hasLongitude) throw httpError(400, 'Latitude and longitude must be provided together');
+    const hasLocation = hasLatitude && hasLongitude;
     const latitude = Number(lat); const longitude = Number(lng); const maxRadius = Number(radius);
     if (hasLocation && (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !Number.isFinite(maxRadius) || maxRadius < 0)) throw httpError(400, 'Invalid location or radius');
+    if (hasLocation) {
+      products = products.filter((product) => {
+        if (product.shop.latitude === null || product.shop.longitude === null) return false;
+        const shopLatitude = Number(product.shop.latitude);
+        const shopLongitude = Number(product.shop.longitude);
+        return Number.isFinite(shopLatitude) && shopLatitude >= -90 && shopLatitude <= 90
+          && Number.isFinite(shopLongitude) && shopLongitude >= -180 && shopLongitude <= 180;
+      });
+    }
     products = products.map((product) => ({ ...product, distanceKm: hasLocation ? distanceKm(latitude, longitude, Number(product.shop.latitude), Number(product.shop.longitude)) : null }));
     if (hasLocation) products = products.filter((product) => product.distanceKm <= maxRadius);
     if (sort === 'price_asc') products.sort((a, b) => Number(a.price) - Number(b.price));

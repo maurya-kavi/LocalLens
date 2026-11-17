@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
+import LocationAutocomplete from '../components/common/LocationAutocomplete';
 import SellerReservations from '../components/common/SellerReservations';
 import api from '../services/api';
 
-const emptyShop = { shopName: '', description: '', category: 'Clothing', address: '', city: '', state: '', pincode: '', latitude: '', longitude: '', phone: '', whatsappNumber: '' };
+const emptyShop = { shopName: '', description: '', category: 'Clothing', address: '', city: '', state: '', pincode: '', phone: '', whatsappNumber: '', manualLatitude: '', manualLongitude: '' };
 const emptyProduct = { name: '', description: '', category: 'Clothing', price: '', shopId: '' };
 
 function SellerDashboard() {
   const [shops, setShops] = useState([]);
   const [shop, setShop] = useState(emptyShop);
+  const [shopLocation, setShopLocation] = useState({ name: '', lat: null, lng: null });
+  const [editingShopId, setEditingShopId] = useState(null);
   const [product, setProduct] = useState(emptyProduct);
   const [image, setImage] = useState(null);
   const [editingProductId, setEditingProductId] = useState(null);
@@ -28,18 +31,83 @@ function SellerDashboard() {
     }
   }
 
-  async function createShop(event) {
+  async function saveShop(event) {
     event.preventDefault();
     setMessage('');
     setError('');
+    const hasManualLatitude = shop.manualLatitude.trim() !== '';
+    const hasManualLongitude = shop.manualLongitude.trim() !== '';
+    if (hasManualLatitude !== hasManualLongitude) {
+      setError('Enter both manual latitude and longitude.');
+      return;
+    }
+    let latitude = null;
+    let longitude = null;
+    if (hasManualLatitude) {
+      latitude = Number(shop.manualLatitude);
+      longitude = Number(shop.manualLongitude);
+      if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) {
+        setError('Latitude must be between -90 and 90.');
+        return;
+      }
+      if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+        setError('Longitude must be between -180 and 180.');
+        return;
+      }
+    } else if (shopLocation.lat !== null && shopLocation.lng !== null) {
+      latitude = Number(shopLocation.lat);
+      longitude = Number(shopLocation.lng);
+    }
     try {
-      await api.post('/shops', { ...shop, latitude: Number(shop.latitude), longitude: Number(shop.longitude) });
+      const { manualLatitude, manualLongitude, ...shopFields } = shop;
+      const payload = { ...shopFields, locationName: shopLocation.name || null, latitude, longitude };
+      if (editingShopId) await api.put(`/shops/${editingShopId}`, payload);
+      else await api.post('/shops', payload);
       setShop(emptyShop);
-      setMessage('Shop profile created.');
+      setShopLocation({ name: '', lat: null, lng: null });
+      setEditingShopId(null);
+      setMessage(editingShopId ? 'Shop profile updated.' : 'Shop profile created.');
       await loadShops();
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Unable to create shop.');
     }
+  }
+
+  function changeShopLocation(name) {
+    setShopLocation({ name, lat: null, lng: null });
+  }
+
+  function selectShopLocation(location) {
+    setShopLocation(location);
+  }
+
+  function startEditShop(item) {
+    setEditingShopId(item.id);
+    setShop({
+      shopName: item.shopName,
+      description: item.description || '',
+      category: item.category,
+      address: item.address,
+      city: item.city,
+      state: item.state,
+      pincode: item.pincode,
+      phone: item.phone,
+      whatsappNumber: item.whatsappNumber || '',
+      manualLatitude: '',
+      manualLongitude: ''
+    });
+    setShopLocation({
+      name: item.locationName || `${item.address}, ${item.city}, ${item.state}`,
+      lat: item.latitude === null ? null : Number(item.latitude),
+      lng: item.longitude === null ? null : Number(item.longitude)
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function cancelShopEdit() {
+    setEditingShopId(null);
+    setShop(emptyShop);
+    setShopLocation({ name: '', lat: null, lng: null });
   }
 
   async function saveProduct(event) {
@@ -98,23 +166,25 @@ function SellerDashboard() {
       {message && <p className="mt-5 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">{message}</p>}
       {error && <p className="mt-5 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
       <div className="mt-8 grid gap-8 lg:grid-cols-2">
-        <form onSubmit={createShop} className="rounded-2xl border border-slate-200 bg-white p-6">
-          <h2 className="text-xl font-semibold">Create a shop profile</h2>
+        <form onSubmit={saveShop} className="rounded-2xl border border-slate-200 bg-white p-6">
+          <h2 className="text-xl font-semibold">{editingShopId ? 'Edit shop profile' : 'Create a shop profile'}</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             {[
               ['shopName', 'Shop name'], ['category', 'Category'], ['address', 'Address'], ['city', 'City'],
-              ['state', 'State'], ['pincode', 'Pincode'], ['latitude', 'Latitude'], ['longitude', 'Longitude'],
-              ['phone', 'Phone'], ['whatsappNumber', 'WhatsApp number']
+              ['state', 'State'], ['pincode', 'Pincode'], ['phone', 'Phone'], ['whatsappNumber', 'WhatsApp number']
             ].map(([key, label]) => (
               <label key={key} className="field-label">{label}
                 <input className="field-input" required={key !== 'whatsappNumber'} type={['latitude', 'longitude'].includes(key) ? 'number' : 'text'} step={['latitude', 'longitude'].includes(key) ? 'any' : undefined} value={shop[key]} onChange={(event) => setShop({ ...shop, [key]: event.target.value })} />
               </label>
             ))}
+            <div className="sm:col-span-2"><LocationAutocomplete label="Shop location (optional)" value={shopLocation.name} selected={shopLocation.lat !== null && shopLocation.lng !== null ? shopLocation : null} onChange={changeShopLocation} onSelect={selectShopLocation} /></div>
+            <label className="field-label">Manual latitude<input className="field-input" type="number" step="any" placeholder="-90 to 90" value={shop.manualLatitude} onChange={(event) => setShop({ ...shop, manualLatitude: event.target.value })} /></label>
+            <label className="field-label">Manual longitude<input className="field-input" type="number" step="any" placeholder="-180 to 180" value={shop.manualLongitude} onChange={(event) => setShop({ ...shop, manualLongitude: event.target.value })} /></label>
             <label className="field-label sm:col-span-2">Description
               <textarea className="field-input" rows="3" value={shop.description} onChange={(event) => setShop({ ...shop, description: event.target.value })} />
             </label>
           </div>
-          <button className="button-primary mt-5 w-full">Create shop</button>
+          <div className="mt-5 flex gap-3"><button className="button-primary flex-1">{editingShopId ? 'Save shop changes' : 'Create shop'}</button>{editingShopId && <button type="button" className="button-secondary" onClick={cancelShopEdit}>Cancel</button>}</div>
         </form>
 
         <div className="space-y-8">
@@ -136,7 +206,7 @@ function SellerDashboard() {
           </form>
           {shops.map((item) => (
             <div key={item.id} className="rounded-2xl border border-slate-200 bg-white p-6">
-              <h2 className="text-lg font-semibold">{item.shopName}</h2>
+              <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">{item.shopName}</h2><button type="button" className="button-secondary px-3 py-2" onClick={() => startEditShop(item)}><Pencil size={15} /> Edit shop</button></div>
               <div className="mt-4 divide-y divide-slate-100">
                 {(item.products || []).map((listedProduct) => (
                   <div key={listedProduct.id} className="flex items-center justify-between gap-3 py-3">
