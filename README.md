@@ -9,6 +9,14 @@ The platform addresses the effort involved in visiting multiple shops to discove
 - **Customers:** Discover nearby products, compare local options, and contact shops before visiting.
 - **Local shopkeepers:** Create a shop presence and showcase selected products to nearby customers.
 
+
+## 🎥 Video Demo
+
+Watch the complete demo of LocalLens to understand its features, workflow, and how it helps local shopkeepers improve their product visibility.
+
+[▶️ Watch LocalLens Demo](https://drive.google.com/file/d/1vY45PSDF8HaEqrm387drARoB6-j3LT5D/view?usp=drive_link)
+
+
 ## Technology stack
 
 - Frontend: React, Vite, JavaScript, Tailwind CSS, React Router, Axios, Lucide React
